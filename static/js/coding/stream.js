@@ -486,8 +486,8 @@ function _fillContextPopover(pop, used, max, system = 0) {
       </div>
       <input type="range" id="coding-ctx-slider" min="4096" max="32768" step="4096"
         value="${Math.min(32768, Math.max(4096, max))}" style="width:100%;">
-      <div class="coding-ctx-hint-row">smaller window = more likely 100% GPU ·
-        on a 6 GB card the sweet spot for 9B-Q3 is 8K, for the 4B it's 16K+</div>
+      <div class="coding-ctx-hint-row">a smaller window uses less memory and is more
+        likely to stay fully on the GPU — pick the largest that fits your hardware</div>
     </div>`;
   const slider = pop.querySelector('#coding-ctx-slider');
   const valEl  = pop.querySelector('#coding-ctx-slider-val');

@@ -33,9 +33,9 @@ your Odysseus core. Your existing Odysseus is **never** put at risk (see *Zero-r
   "Ran …" tool rows, live thinking, +/− diffs.
 - 🔌 **Works with API or local** — Anthropic / OpenAI / OpenRouter / Groq, or Ollama locally.
   You choose at install time.
-- 🗺️ **~100K *effective* context on a 6 GB GPU** — a deterministic, 0-VRAM **code-graph**
+- 🗺️ **Large *effective* context on a modest GPU** — a deterministic, low-memory **code-graph**
   (symbols, callers, callees) + a **session-recall** store let the model *reach* a huge
-  codebase precisely without holding it all in the window. (Recall, not a literal 100K window.)
+  codebase precisely without holding it all in the window. (Recall, not a literal giant window.)
 - 🛠️ **Real tools** — read/write/edit, bash, web search, repo map, git (status/diff/commit/PR).
 - 🧩 **Claude-compat** — workspace `.claude/skills/*/SKILL.md`, `.claude/commands/*.md`,
   `.claude/settings.json` hooks (PreToolUse/PostToolUse), `CLAUDE.md`, and MCP servers.
@@ -78,13 +78,13 @@ The installer **cannot break your Odysseus**:
   and reasoning controls work correctly.
 - **Both:** pick the model per session from the model picker.
 
-## How the "100K on a 6 GB GPU" works (the honest version)
+## How the large *effective* context works (the honest version)
 
-A 6 GB card physically cannot hold a literal 100K-token window for a 7–9B model. Instead the
-agent **offloads** its work to two deterministic, 0-VRAM stores and **pulls** from them on demand:
-a tree-sitter/AST **code-graph** of the repo and a SQLite-FTS **session-recall** store of the
-model's own decisions/results. The live window stays small (fast, 100% GPU); the model can
-*reach* far more than it holds — the same way Claude Code feels big on large repos.
+A modest consumer GPU can't hold a literal 100K-token window for a small local model. Instead the
+agent **offloads** its work to two deterministic, low-memory stores and **pulls** from them on
+demand: a tree-sitter/AST **code-graph** of the repo and a SQLite-FTS **session-recall** store of
+the model's own decisions/results. The live window stays small (fast, fully on the GPU); the model
+can *reach* far more than it holds — the same way Claude Code feels big on large repos.
 
 ## Contributing
 

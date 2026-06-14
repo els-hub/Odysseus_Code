@@ -25,11 +25,9 @@ _DEFAULT_CTX_TOKENS = 32_768
 # Known context lengths for local model families (per-model token metadata —
 # Hermes-agent pattern). Longest prefix match wins.
 _MODEL_CTX_TOKENS = {
-    # Ollama runs these at 16K by default on this host (verified via
-    # `ollama ps` CONTEXT column) — budget against the RUNTIME window,
-    # not the architecture maximum, or compaction fires too late.
-    "qwopus": 16_384,
-    "9b-coder": 16_384,
+    # Budget against the model's RUNTIME context window (what the server actually
+    # serves), not the architecture maximum, or compaction fires too late. Longest
+    # prefix match wins; tune these for your own models/setup.
     "qwen3.5": 16_384,
     "qwen3": 40_960,
     "deepseek-r1": 65_536,
@@ -478,7 +476,7 @@ async def stream_coding_agent(
             yield _SSE_DONE
             return
 
-        # Some Qwopus GGUF templates leak <think>…</think> into the content
+        # Some local GGUF templates leak <think>…</think> into the content
         # channel instead of the reasoning channel. Route the thoughts to the
         # thinking display and keep only the real answer — otherwise stray
         # </think> tags spam the output and break tool parsing.

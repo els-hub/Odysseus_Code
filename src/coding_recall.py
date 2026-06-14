@@ -7,7 +7,7 @@ and even its thinking — after those turns have been pruned/compacted out of th
 
 Deterministic, 0-VRAM, no embeddings — SQLite FTS5 full-text search (validated by Engram /
 AIngram / recuerd0: keyword recall beats vector DBs for exact technical terms, with no
-embedding model to host on the 6 GB card). Falls back to LIKE if FTS5 isn't compiled in.
+embedding model to host on the GPU). Falls back to LIKE if FTS5 isn't compiled in.
 
 Flow: every turn, `capture_turn` stores the pieces; the model calls the `recall` tool
 ({"query": "..."}) to search them; results are injected as a compact block.
