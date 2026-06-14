@@ -1,0 +1,23 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# Local config / secrets (never commit keys)
+.env
+coding_config.json
+
+# Installer artifacts (created in a TARGET Odysseus, not here)
+.odysseus_code_backup/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Test scratch
+_codegraph_test.db
+*.db
