@@ -22,7 +22,7 @@
 Odysseus_Code drops a **Coding tab** into an Odysseus install you already run — the same
 plan → search → write → verify agent loop you get in Claude Code Desktop, but on **your**
 models and **your** machine. Point it at an API (Anthropic, OpenAI, OpenRouter, Groq, …) or
-run it **fully local** on a small GPU.
+run it **fully local**.
 
 It is an **add-on**, not a fork: it ships only the coding files + a safe installer and rides on
 your Odysseus core. Your existing Odysseus is **never** put at risk (see *Zero-risk* below).
