@@ -26,6 +26,14 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+# Windows consoles default to cp1252 and crash on non-ASCII output. Force UTF-8 so the
+# installer can NEVER die on an encoding error (it would otherwise abort mid-run).
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="backslashreplace")
+except Exception:
+    pass
+
 HERE = Path(__file__).resolve().parent
 SENTINEL = "odysseus_code"
 S_OPEN = f"<!-- >>> {SENTINEL} >>> -->"
@@ -77,10 +85,10 @@ REQUIRED_IMPORTS = ["fastapi", "httpx"]   # the tab is pure-Python on top of Ody
 
 
 def log(msg): print(f"  {msg}")
-def ok(msg): print(f"  ✓ {msg}")
-def warn(msg): print(f"  ! {msg}")
+def ok(msg): print(f"  [OK] {msg}")
+def warn(msg): print(f"  [!] {msg}")
 def die(msg):
-    print(f"\n  ✗ {msg}\n  Nothing was changed.\n")
+    print(f"\n  [X] {msg}\n  Nothing was changed.\n")
     sys.exit(1)
 
 
@@ -135,7 +143,11 @@ def insert_block(text, fragment, *, before=None, after=None, marker_check):
         idx = text.find(before)
         if idx == -1:
             raise KeyError(f"anchor not found: {before!r}")
-        return text[:idx] + block + text[idx:], True
+        # Snap to the START of the line containing the anchor so we insert whole lines
+        # and NEVER split an existing tag/line (e.g. anchoring on id="tool-" must not
+        # cut `<div class="list-item" id="tool-memory-btn">` in half).
+        line_start = text.rfind("\n", 0, idx) + 1
+        return text[:line_start] + block + text[line_start:], True
     if after is not None:
         idx = text.find(after)
         if idx == -1:
@@ -219,7 +231,7 @@ def main():
                 shutil.copy2(backup / rel, root / rel)
             except OSError:
                 pass
-        print(f"\n  ✗ {reason}\n  ↺ Rolled back from backup. Your Odysseus is unchanged.\n")
+        print(f"\n  [X] {reason}\n  [rolled back] from backup - your Odysseus is unchanged.\n")
         sys.exit(1)
 
     # ── Dependency dedup: install only what's missing ───────────────────────────
@@ -272,8 +284,8 @@ def main():
         log(f"    cd {root} && docker compose up -d --build")
     else:
         log("Native install — restart your Odysseus server to load the Coding tab.")
-    print(f"\n  ✓ Done. Backend: {backend}. Backup: {backup}")
-    print("  Open Odysseus → the Coding tab is in the sidebar. Uninstall: python uninstall.py\n")
+    print(f"\n  [OK] Done. Backend: {backend}. Backup: {backup}")
+    print("  Open Odysseus -> the Coding tab is in the sidebar. Uninstall: python uninstall.py\n")
 
 
 if __name__ == "__main__":

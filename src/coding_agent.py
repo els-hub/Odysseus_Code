@@ -11,6 +11,28 @@ from src.coding_tools import (execute_coding_tool, load_claude_md, load_claude_s
 from src.coding_prompts import build_coding_system_prompt
 from src.llm_core import stream_llm_with_fallback, llm_call_async, llm_call_async_with_fallback
 from src import coding_recall
+import inspect as _inspect
+
+
+def _host_supports_think() -> bool:
+    """A vanilla Odysseus's stream_llm/llm_call_async may not accept a `think` kwarg —
+    passing it would TypeError. Detect support so we only send it when the host has it
+    (think=False suppresses reasoning-model over-thinking; harmless to omit otherwise)."""
+    try:
+        from src import llm_core as _lc
+        for fn in (getattr(_lc, "stream_llm", None), getattr(_lc, "llm_call_async", None)):
+            if fn is None:
+                return False
+            params = _inspect.signature(fn).parameters
+            if "think" not in params and not any(
+                    p.kind == p.VAR_KEYWORD for p in params.values()):
+                return False
+        return True
+    except Exception:
+        return False
+
+
+_THINK_KW = {"think": False} if _host_supports_think() else {}
 
 logger = logging.getLogger(__name__)
 _SSE_DONE = "data: [DONE]\n\n"
@@ -165,7 +187,7 @@ async def extract_coding_memory(
             [{"role": "user", "content": extraction_prompt}],
             max_tokens=512,
             temperature=0.1,
-            think=False,
+            **_THINK_KW,
         )
         if not response:
             return
@@ -241,7 +263,7 @@ async def compact_history(
             [{"role": "user", "content": compact_prompt}],
             max_tokens=1024,
             temperature=0.1,
-            think=False,
+            **_THINK_KW,
         )
     except Exception as exc:
         logger.warning("compact_history LLM call failed: %s — keeping history", exc)
@@ -435,7 +457,7 @@ async def stream_coding_agent(
             # it ACT — proven in-container: done_reason length→stop, content 0→full.
             async for chunk in stream_llm_with_fallback(
                 candidates, messages, temperature=0.2, max_tokens=max_tokens,
-                think=False,
+                **_THINK_KW,
             ):
                 if done_streaming:
                     continue
@@ -646,7 +668,7 @@ async def stream_coding_agent(
                   "Reply with ONLY a 3-5 word title (no quotes, no punctuation) "
                   f"for a coding session that starts with: {first}"}],
                 max_tokens=900, temperature=0.1, headers=headers or {},
-                think=False,
+                **_THINK_KW,
             )
             title = (title or "").strip().strip('"\'' ).splitlines()[-1][:48]
             if title:
@@ -666,7 +688,7 @@ def _export_trajectory(session: CodingSession, system_prompt: str) -> None:
     these files offline; nothing here blocks or can fail the user's turn.
     """
     try:
-        from src.constants import CODING_SESSIONS_DIR
+        from src.coding_session import CODING_SESSIONS_DIR  # self-contained (not host constants)
         from pathlib import Path
         traj_dir = Path(CODING_SESSIONS_DIR).parent / "coding_trajectories"
         traj_dir.mkdir(parents=True, exist_ok=True)

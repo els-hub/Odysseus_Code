@@ -354,6 +354,19 @@ async def execute_coding_tool(
         except Exception as e:
             return "code_graph", {"error": f"code_graph failed: {e}", "exit_code": 1}, todo
 
+    if tool in ("git_status", "git_diff", "git_commit", "git_create_pr"):
+        # Route git tools to our bundled, self-contained coding_git module rather than
+        # relying on the host dispatcher having a git branch (a vanilla Odysseus doesn't).
+        if not workspace:
+            return tool, {"error": "No workspace connected — connect a folder first.",
+                          "exit_code": 1}, todo
+        try:
+            from src.coding_git import git_tool
+            result = await git_tool(tool, block.content, workspace)
+            return tool, result, todo
+        except Exception as e:
+            return tool, {"error": f"{tool} failed: {e}", "exit_code": 1}, todo
+
     PATH_TOOLS = {"read_file", "write_file", "edit_file", "glob", "grep", "ls"}
     if tool in PATH_TOOLS and workspace:
         try:

@@ -12,6 +12,11 @@ import shutil
 import sys
 from pathlib import Path
 
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="backslashreplace")
+except Exception:
+    pass
+
 HERE = Path(__file__).resolve().parent
 SENT_HTML = re.compile(r"\n?<!-- >>> odysseus_code >>> -->.*?<!-- <<< odysseus_code <<< -->\n?", re.S)
 SENT_PY = re.compile(r"\n?# >>> odysseus_code >>>.*?# <<< odysseus_code <<<\n?", re.S)
@@ -29,26 +34,28 @@ def main():
     ap.add_argument("--target")
     ap.add_argument("--restore-backup", action="store_true",
                     help="restore the most recent installer backup instead of stripping")
+    ap.add_argument("--strip", action="store_true",
+                    help="force sentinel-stripping even if a backup exists")
     args = ap.parse_args()
 
     root = Path(args.target) if args.target else HERE.parent
     if not (root / "app.py").is_file():
-        print(f"  ✗ no Odysseus app.py found at {root}; pass --target")
+        print(f"  [X] no Odysseus app.py found at {root}; pass --target")
         sys.exit(1)
     root = root.resolve()
     print(f"\n  Uninstalling Odysseus_Code from {root}\n  " + "-" * 40)
 
-    if args.restore_backup:
-        backups = sorted((root / ".odysseus_code_backup").glob("*"))
-        if not backups:
-            print("  ✗ no backup found")
-            sys.exit(1)
+    backups = sorted((root / ".odysseus_code_backup").glob("*"))
+    # Default: restore from the installer backup — guarantees app.py/index.html are
+    # returned BYTE-IDENTICAL to before install. Strip-mode is the fallback when no
+    # backup exists (or if forced with --strip).
+    if backups and not args.strip:
         latest = backups[-1]
         for rel in ("app.py", "static/index.html", "requirements.txt"):
             src = latest / rel
             if src.is_file():
                 shutil.copy2(src, root / rel)
-        print(f"  ✓ restored backup {latest.name}")
+        print(f"  [OK] restored backup {latest.name} (byte-identical revert)")
     else:
         for rel in ("app.py", "static/index.html"):
             p = root / rel
@@ -59,11 +66,11 @@ def main():
                 try:
                     ast.parse(txt2)
                 except SyntaxError as e:
-                    print(f"  ✗ stripped app.py would not parse ({e}); "
+                    print(f"  [X] stripped app.py would not parse ({e}); "
                           f"re-run with --restore-backup")
                     sys.exit(1)
             p.write_text(txt2, encoding="utf-8")
-        print("  ✓ removed integration blocks from app.py + index.html")
+        print("  [OK] removed integration blocks from app.py + index.html")
 
     removed = 0
     for rel in COPY_FILES:
@@ -75,7 +82,7 @@ def main():
     cdir = root / "static" / "js" / "coding"
     if cdir.is_dir() and not any(cdir.iterdir()):
         cdir.rmdir()
-    print(f"  ✓ removed {removed} coding files")
+    print(f"  [OK] removed {removed} coding files")
     print("\n  Done. Rebuild (Docker) or restart (native) to fully unload.\n")
 
 

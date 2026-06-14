@@ -6,7 +6,14 @@ from dataclasses import asdict, dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
-from src.constants import CODING_SESSIONS_DIR
+import os
+# Self-contained: derive our session dir from the host's DATA_DIR rather than importing
+# a coding-specific constant (CODING_SESSIONS_DIR) that a vanilla Odysseus doesn't define.
+try:
+    from src.constants import CODING_SESSIONS_DIR
+except ImportError:
+    from src.constants import DATA_DIR
+    CODING_SESSIONS_DIR = os.path.join(DATA_DIR, "coding_sessions")
 
 logger = logging.getLogger(__name__)
 SESSIONS_DIR = Path(CODING_SESSIONS_DIR)
