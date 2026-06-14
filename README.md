@@ -92,4 +92,4 @@ Issues and PRs welcome — see [CONTRIBUTING.md](CONTRIBUTING.md). Good first is
 
 ## License
 
-[MIT](LICENSE) © els-hub (Mohamed Elias)
+[MIT](LICENSE) © els-hub
